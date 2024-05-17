@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Watch</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/franken-ui-releases@0.0.11/dist/default.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/franken-ui-releases@0.0.11/dist/slate.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/franken-ui-releases@0.0.11/dist/stone.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/franken-ui-releases@0.0.11/dist/gray.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/franken-ui-releases@0.0.11/dist/neutral.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/franken-ui-releases@0.0.11/dist/red.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/franken-ui-releases@0.0.11/dist/rose.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/franken-ui-releases@0.0.11/dist/orange.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/franken-ui-releases@0.0.11/dist/green.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/franken-ui-releases@0.0.11/dist/blue.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/franken-ui-releases@0.0.11/dist/yellow.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/franken-ui-releases@0.0.11/dist/violet.min.css" />
+
+    <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 240 10% 3.9%;
+            --muted: 240 4.8% 95.9%;
+            --muted-foreground: 240 3.8% 46.1%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 240 10% 3.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 240 10% 3.9%;
+            --border: 240 5.9% 90%;
+            --input: 240 5.9% 90%;
+            --primary: 240 5.9% 10%;
+            --primary-foreground: 0 0% 98%;
+            --secondary: 240 4.8% 95.9%;
+            --secondary-foreground: 240 5.9% 10%;
+            --accent: 240 4.8% 95.9%;
+            --accent-foreground: 240 5.9% 10%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 0 0% 98%;
+            --ring: 240 5.9% 10%;
+            --uk-breakpoint-s: 640px;
+            --uk-breakpoint-m: 768px;
+            --uk-breakpoint-l: 1024px;
+            --uk-breakpoint-xl: 1080px;
+            --uk-leader-fill-content: .;
+            --uk-position-margin-offset: 0px
+        }
+        tr.htmx-swapping td {
+            opacity: 0;
+            transition: opacity 1s ease-out;
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.20.8/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.20.8/dist/js/uikit-icons.min.js"></script>
+
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+</head>
+<body>
+    <nav class="uk-navbar-container">
+        <div class="uk-container">
+            <div uk-navbar>
+    
+                <div class="uk-navbar-left">
+    
+                    <ul class="uk-navbar-nav">
+                        <li class="uk-active"><a href="/">Home</a></li>
+                    </ul>
+    
+                </div>
+    
+            </div>
+        </div>
+    </nav>
+
+    <main class="uk-container py-8">
+        {{block "content" .}}
+        {{end}}
+    </main>
+</body>
+</html>

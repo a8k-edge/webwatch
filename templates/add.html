@@ -1,0 +1,29 @@
+{{define "content"}}
+<div class="uk-card mx-auto w-[350px]">
+    <div class="uk-card-header space-y-1.5">
+        <h3 class="uk-card-title">Create target</h3>
+    </div>
+
+    <form method='post' action="/add">
+        <div class="uk-card-body py-0">
+            <div class="mt-3">
+                <label class="uk-form-label" for="form-name">Name</label>
+                <div class="uk-form-controls">
+                    <input class="uk-input" id="form-name" type="text" name="name" required>
+                </div>
+            </div>
+            <div class="mt-3">
+                <label class="uk-form-label" for="form-url">URL</label>
+                <div class="uk-form-controls">
+                    <input class="uk-input" id="form-url" type="url" name="url" required>
+                </div>
+            </div>
+        </div>
+        
+        <div class="uk-card-footer">
+        <input type='submit' value='Add Target' class="uk-button uk-button-primary">
+        </div>
+    </form>
+
+</div>
+{{end}}

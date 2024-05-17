@@ -1,0 +1,48 @@
+{{define "content"}}
+    <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+        List of Targets
+        
+        <a href='/add' class="uk-button uk-button-ghost pl-4">
+            <span class="mr-2" uk-icon="icon: plus; ratio: 0.80"></span>
+            Add a new target
+        </a>
+    </h2>
+    <table class="uk-table uk-table-hover uk-table-divider mt-4">
+        <thead>
+            <tr>
+                <th class="p-2">Name</th>
+                <th class="p-2">URL</th>
+                <th class="p-2"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Rows}}
+            <tr>
+                <td class="p-2">
+                    <a href='/target/{{.ID}}' class="uk-button uk-button-link">{{.Name}}</a>
+                </td>
+                <td class="p-2">{{.URL}}</td>
+                <td class="p-2 flex">
+                    <a href='/target/{{.ID}}' class="uk-button uk-button-ghost">View</a>
+                    <button
+                        class="uk-button uk-button-ghost ml-2"
+                        hx-delete="/target/{{.ID}}"
+                        hx-confirm="Are you sure?"
+                        hx-target="closest tr"
+                        hx-swap="outerHTML swap:1s"
+                    >Delete</button>
+                    <div class="flex items-center space-x-2 ml-2">
+                        <input
+                            class="uk-toggle-switch uk-toggle-switch-primary"
+                            id="toggle-switch"
+                            type="checkbox"
+                            hx-post="/target/{{.ID}}/toggle"
+                            {{if .IsActive}}checked{{end}}/>
+                        <label class="uk-form-label" for="toggle-switch">Is Active</label>
+                    </div>
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+{{end}}

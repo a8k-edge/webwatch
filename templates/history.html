@@ -1,0 +1,12 @@
+{{define "content"}}
+    <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+        History for {{.Name}}
+    </h2>
+    <a href="{{.URL}}">{{.URL}}</a>
+    
+    <ul class="mt-5">
+        {{range .History}}
+        <li>{{.ID}} {{.CreatedAt.Format "2006-01-02 15:04:05"}}: {{.Hash}}</li>
+        {{end}}
+    </ul>
+{{end}}
