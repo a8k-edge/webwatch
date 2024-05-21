@@ -4,6 +4,7 @@ go 1.22.0
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.2
+	github.com/aryann/difflib v0.0.0-20210328193216-ff5ff6dc229b
 	github.com/gorilla/mux v1.8.1
 	gorm.io/driver/sqlite v1.5.5
 	gorm.io/gorm v1.25.10

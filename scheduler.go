@@ -1,15 +1,18 @@
 package main
 
 import (
-	"bytes"
 	"crypto/md5"
+	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/aryann/difflib"
+	"gorm.io/gorm"
 )
 
 func TaskManagerEventLoop() {
@@ -31,49 +34,57 @@ func executeTasks() {
 func executeTask(target Target) {
 	log.Println("Fetching URL:", target.URL, time.Now())
 
-	newHash, err := getPageHash(target.URL)
+	resp, err := http.Get(target.URL)
 	if err != nil {
-		log.Printf("Error checking for URL change %s: %v", target.URL, err)
+		log.Printf("Error fetching URL %s: %v", target.URL, err)
 		return
 	}
+	defer resp.Body.Close()
 
-	db.Create(&History{
-		TargetID: target.ID,
-		Hash:     newHash,
-	})
-}
-
-func getPageHash(url string) (string, error) {
-	content, err := fetchPage(url)
-	if err != nil {
-		return "", err
-	}
-
-	p := bytes.NewReader(content)
-	doc, _ := goquery.NewDocumentFromReader(p)
-
+	doc, _ := goquery.NewDocumentFromReader(resp.Body)
 	doc.Find("script").Each(func(i int, el *goquery.Selection) {
 		el.Remove()
 	})
 
-	docBytes := []byte(doc.Text())
-	currentHash := calculateHash(docBytes)
-	return currentHash, nil
-}
-
-func fetchPage(url string) ([]byte, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
+	hash := calculateHash([]byte(doc.Text()))
+	isChanged := false
+	var history History
+	err = db.Order("created_at desc").Where("target_id == ?", target.ID).First(&history).Error
+	var diffBytes []byte
+	prev := make([]string, 0)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		isChanged = true
+	} else if err != nil {
+		log.Println("Error querying target:", err)
+		return
+	} else {
+		isChanged = history.Hash != hash
+		preDiffs := make([]difflib.DiffRecord, 0)
+		if err := json.Unmarshal([]byte(history.Diff), &preDiffs); err != nil {
+			log.Println("Error unmarshal prev history diff:", err)
+			return
+		}
+		for i := range preDiffs {
+			if preDiffs[i].Delta == difflib.LeftOnly {
+				continue
+			}
+			prev = append(prev, preDiffs[i].Payload)
+		}
 	}
-	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	diffBytes, err = json.Marshal(difflib.Diff(prev, strings.Split(doc.Text(), "\n")))
 	if err != nil {
-		return nil, err
+		log.Println("Error marshal history diff:", err)
+		return
 	}
 
-	return body, nil
+	db.Create(&History{
+		TargetID:   target.ID,
+		Hash:       hash,
+		IsChanged:  isChanged,
+		StatusCode: resp.StatusCode,
+		Diff:       string(diffBytes),
+	})
 }
 
 func calculateHash(content []byte) string {

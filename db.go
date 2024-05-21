@@ -20,9 +20,13 @@ type Target struct {
 }
 
 type History struct {
-	ID        uint `gorm:"primaryKey;autoIncrement"`
-	TargetID  uint
-	Hash      string
+	ID         uint `gorm:"primaryKey;autoIncrement"`
+	TargetID   uint
+	Hash       string
+	IsChanged  bool   `gorm:"default:false"`
+	StatusCode int    `gorm:"default:0"`
+	Diff       string `gorm:"default:''"`
+
 	CreatedAt time.Time
 }
 
