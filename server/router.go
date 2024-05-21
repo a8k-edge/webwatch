@@ -1,28 +1,48 @@
 package server
 
 import (
+	"embed"
 	"fmt"
-	"net/http"
+	"html/template"
+	"io"
 
-	"github.com/gorilla/mux"
+	"webwatch/config"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
-func Serve() {
-	router := mux.NewRouter()
+//go:embed templates
+var tmplFS embed.FS
 
-	router.HandleFunc("/", handleHome).Methods(http.MethodGet)
-	router.HandleFunc("/add", handleAddTargetForm).Methods(http.MethodGet)
-	router.HandleFunc("/add", handleAddTarget).Methods(http.MethodPost)
-	router.HandleFunc("/target/{id:[0-9]+}", handleTargetHistory).Methods(http.MethodGet)
-	router.HandleFunc("/target/{id:[0-9]+}", handleTargetDelete).Methods(http.MethodDelete)
-	router.HandleFunc("/target/{id:[0-9]+}/toggle", handleToggleActive).Methods(http.MethodPost)
-	router.HandleFunc("/target/{tid:[0-9]+}/history/{hid:[0-9]+}", handleHistoryView).Methods(http.MethodGet)
+type Renderer struct{}
 
-	// not found
-	http.Handle("/", router)
-
-	fmt.Println("Starting UI server on port 8080...")
-	if err := http.ListenAndServe("localhost:8080", router); err != nil {
-		fmt.Println("Error starting UI server:", err)
+func (r *Renderer) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	tmpl, err := template.ParseFS(tmplFS, "templates/base.html", name)
+	if err != nil {
+		return err
 	}
+	return tmpl.Execute(w, data)
+}
+
+func Serve() {
+	e := echo.New()
+
+	e.Renderer = &Renderer{}
+
+	e.Pre(middleware.RemoveTrailingSlash())
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	e.GET("/", handleHome)
+	e.GET("/add", handleAddTargetForm)
+	e.POST("/add", handleAddTarget)
+	e.GET("/target/:id", handleTargetHistory)
+	e.DELETE("/target/:id", handleTargetDelete)
+	e.POST("/target/:id/toggle", handleToggleActive)
+	e.GET("/target/:tid/history/:hid", handleHistoryView)
+
+	addr := fmt.Sprintf("localhost:%s", config.Cfg.Server.Port)
+	fmt.Println("Starting UI server", addr)
+	e.Logger.Fatal(e.Start(addr))
 }
