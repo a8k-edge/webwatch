@@ -10,6 +10,7 @@
     <table class="uk-table uk-table-hover uk-table-divider mt-4">
         <thead>
             <tr>
+                <th class="p-2">Active</th>
                 <th class="p-2">Name</th>
                 <th class="p-2">URL</th>
                 <th class="p-2"></th>
@@ -19,27 +20,34 @@
             {{range .Rows}}
             <tr>
                 <td class="p-2">
+                    <div class="flex items-center space-x-2 ml-2">
+                        <input
+                        class="uk-toggle-switch uk-toggle-switch-primary"
+                        id="toggle-switch"
+                        type="checkbox"
+                        hx-post="/target/{{.ID}}/toggle"
+                        {{if .IsActive}}checked{{end}}/>
+                        </div>
+
+                </td>
+                <td class="p-2">
                     <a href='/target/{{.ID}}' class="uk-button uk-button-link">{{.Name}}</a>
                 </td>
                 <td class="p-2">{{.URL}}</td>
                 <td class="p-2 flex">
-                    <a href='/target/{{.ID}}' class="uk-button uk-button-ghost">View</a>
+                    <a
+                        href='/target/{{.ID}}'
+                        class="uk-icon-button uk-margin-small-right"
+                        uk-icon="ratio: 0.8; icon: eye"
+                    ></a>
                     <button
-                        class="uk-button uk-button-ghost ml-2"
+                        class="uk-icon-button uk-margin-small-right"
+                        uk-icon="ratio: 0.8; icon: trash"
                         hx-delete="/target/{{.ID}}"
                         hx-confirm="Are you sure?"
                         hx-target="closest tr"
                         hx-swap="outerHTML swap:1s"
-                    >Delete</button>
-                    <div class="flex items-center space-x-2 ml-2">
-                        <input
-                            class="uk-toggle-switch uk-toggle-switch-primary"
-                            id="toggle-switch"
-                            type="checkbox"
-                            hx-post="/target/{{.ID}}/toggle"
-                            {{if .IsActive}}checked{{end}}/>
-                        <label class="uk-form-label" for="toggle-switch">Is Active</label>
-                    </div>
+                    ></button>
                 </td>
             </tr>
             {{end}}
