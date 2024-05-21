@@ -1,13 +1,10 @@
-package main
+package db
 
 import (
 	"time"
 
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
-
-var db *gorm.DB
 
 type Target struct {
 	gorm.Model
@@ -28,15 +25,4 @@ type History struct {
 	Diff       string `gorm:"default:''"`
 
 	CreatedAt time.Time
-}
-
-func initializeDB(dbPath string) {
-	var err error
-	db, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database")
-	}
-
-	db.AutoMigrate(&Target{})
-	db.AutoMigrate(&History{})
 }

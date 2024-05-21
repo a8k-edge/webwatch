@@ -1,43 +1,24 @@
-package main
+package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"strconv"
+
+	"webwatch/db"
 
 	"github.com/aryann/difflib"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
-func Serve() {
-	router := mux.NewRouter()
-
-	router.HandleFunc("/", handleHome).Methods(http.MethodGet)
-	router.HandleFunc("/add", handleAddTargetForm).Methods(http.MethodGet)
-	router.HandleFunc("/add", handleAddTarget).Methods(http.MethodPost)
-	router.HandleFunc("/target/{id:[0-9]+}", handleTargetHistory).Methods(http.MethodGet)
-	router.HandleFunc("/target/{id:[0-9]+}", handleTargetDelete).Methods(http.MethodDelete)
-	router.HandleFunc("/target/{id:[0-9]+}/toggle", handleToggleActive).Methods(http.MethodPost)
-	router.HandleFunc("/target/{tid:[0-9]+}/history/{hid:[0-9]+}", handleHistoryView).Methods(http.MethodGet)
-
-	// not found
-	http.Handle("/", router)
-
-	fmt.Println("Starting UI server on port 8080...")
-	if err := http.ListenAndServe("localhost:8080", router); err != nil {
-		fmt.Println("Error starting UI server:", err)
-	}
-}
-
 func handleHome(w http.ResponseWriter, r *http.Request) {
-	var targets []Target
-	db.Find(&targets)
+	var targets []db.Target
+	db.GetDB().Find(&targets)
 
-	renderTemplate(w, []string{"templates/home.html"}, struct{ Rows []Target }{targets})
+	renderTemplate(w, []string{"templates/home.html"}, struct{ Rows []db.Target }{targets})
 }
 
 func handleAddTargetForm(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +42,7 @@ func handleAddTarget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.Create(&Target{Name: name, URL: url})
+	db.GetDB().Create(&db.Target{Name: name, URL: url})
 
 	http.Redirect(w, r, "/", http.StatusFound)
 }
@@ -76,8 +57,8 @@ func handleTargetHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var target Target
-	if err := db.Preload("History", func(db *gorm.DB) *gorm.DB {
+	var target db.Target
+	if err := db.GetDB().Preload("History", func(db *gorm.DB) *gorm.DB {
 		return db.Order("histories.created_at DESC")
 	}).First(&target, id).Error; err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -86,8 +67,8 @@ func handleTargetHistory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Target  Target
-		History []History
+		Target  db.Target
+		History []db.History
 	}{
 		Target:  target,
 		History: target.History,
@@ -106,7 +87,7 @@ func handleTargetDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := db.Delete(&Target{}, id).Error; err != nil {
+	if err := db.GetDB().Delete(&db.Target{}, id).Error; err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		log.Println("Error querying target:", err)
 		return
@@ -124,15 +105,15 @@ func handleToggleActive(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var target Target
-	if err := db.Preload("History").First(&target, id).Error; err != nil {
+	var target db.Target
+	if err := db.GetDB().Preload("History").First(&target, id).Error; err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		log.Println("Error querying target:", err)
 		return
 	}
 
 	target.IsActive = !target.IsActive
-	db.Save(&target)
+	db.GetDB().Save(&target)
 }
 
 func handleHistoryView(w http.ResponseWriter, r *http.Request) {
@@ -145,8 +126,8 @@ func handleHistoryView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var history History
-	if err := db.First(&history, id).Error; err != nil {
+	var history db.History
+	if err := db.GetDB().First(&history, id).Error; err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		log.Println("Error querying target:", err)
 		return
@@ -158,7 +139,7 @@ func handleHistoryView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data := struct {
-		History History
+		History db.History
 		Diff    []difflib.DiffRecord
 	}{
 		History: history,

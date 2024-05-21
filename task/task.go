@@ -1,4 +1,4 @@
-package main
+package task
 
 import (
 	"crypto/md5"
@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"webwatch/db"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/aryann/difflib"
@@ -23,15 +25,15 @@ func TaskManagerEventLoop() {
 }
 
 func executeTasks() {
-	var targets []Target
-	db.Where("is_active = ?", true).Find(&targets)
+	var targets []db.Target
+	db.GetDB().Where("is_active = ?", true).Find(&targets)
 
 	for _, target := range targets {
 		executeTask(target)
 	}
 }
 
-func executeTask(target Target) {
+func executeTask(target db.Target) {
 	log.Println("Fetching URL:", target.URL, time.Now())
 
 	resp, err := http.Get(target.URL)
@@ -48,8 +50,8 @@ func executeTask(target Target) {
 
 	hash := calculateHash([]byte(doc.Text()))
 	isChanged := false
-	var history History
-	err = db.Order("created_at desc").Where("target_id == ?", target.ID).First(&history).Error
+	var history db.History
+	err = db.GetDB().Order("created_at desc").Where("target_id == ?", target.ID).First(&history).Error
 	var diffBytes []byte
 	prev := make([]string, 0)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -78,7 +80,7 @@ func executeTask(target Target) {
 		return
 	}
 
-	db.Create(&History{
+	db.GetDB().Create(&db.History{
 		TargetID:   target.ID,
 		Hash:       hash,
 		IsChanged:  isChanged,
