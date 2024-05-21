@@ -1,12 +1,31 @@
 {{define "content"}}
     <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
-        History for {{.Name}}
+        History for {{.Target.Name}}
     </h2>
-    <a href="{{.URL}}">{{.URL}}</a>
-    
-    <ul class="mt-5">
-        {{range .History}}
-        <li>{{.ID}} {{.CreatedAt.Format "2006-01-02 15:04:05"}}: {{.Hash}}</li>
-        {{end}}
-    </ul>
+    <a href="{{.Target.URL}}">{{.Target.URL}}</a>
+
+    <table class="uk-table uk-table-divider uk-table-hover">
+        <thead>
+          <tr>
+            <th>Has Changed</th>
+            <th>Date</th>
+            <th>Status Code</th>
+            <th>Hash</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+            {{range .History}}
+            <tr class="{{if .IsChanged}}bg-lime-100{{end}}">
+                <td>{{.IsChanged}}</td>
+                <td>{{.CreatedAt}}</td>
+                <td>{{.StatusCode}}</td>
+                <td>{{.Hash}}</td>
+                <td>
+                    <a href='/target/{{$.Target.ID}}/history/{{.ID}}'>View</a>
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
 {{end}}

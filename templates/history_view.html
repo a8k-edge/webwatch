@@ -1,0 +1,21 @@
+{{define "content"}}
+    <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight mb-8">
+        History View for {{.History.ID}}
+    </h2>
+    
+    <div class="flex">
+        <!-- <div>
+        {{range $index, $element := .Diff}}
+            <div class="container__lines">{{$index}}</div>
+        {{end}}
+        </div> -->
+        <div>
+        {{range .Diff}}
+            <p class="px-4 mt-1 {{if eq .Delta 1}}bg-red-100{{end}}{{if eq .Delta 2}}bg-green-100{{end}}{{if eq .Delta 0}}bg-gray-100{{end}}">
+                {{.Delta}}
+                {{.Payload}}
+            </p>
+        {{end}}
+    </div>
+    </div>
+{{end}}

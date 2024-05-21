@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"strconv"
 
+	"github.com/aryann/difflib"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
@@ -20,6 +22,10 @@ func Serve() {
 	router.HandleFunc("/target/{id:[0-9]+}", handleTargetHistory).Methods(http.MethodGet)
 	router.HandleFunc("/target/{id:[0-9]+}", handleTargetDelete).Methods(http.MethodDelete)
 	router.HandleFunc("/target/{id:[0-9]+}/toggle", handleToggleActive).Methods(http.MethodPost)
+	router.HandleFunc("/target/{tid:[0-9]+}/history/{hid:[0-9]+}", handleHistoryView).Methods(http.MethodGet)
+
+	// not found
+	http.Handle("/", router)
 
 	fmt.Println("Starting UI server on port 8080...")
 	if err := http.ListenAndServe("localhost:8080", router); err != nil {
@@ -80,12 +86,10 @@ func handleTargetHistory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Name    string
-		URL     string
+		Target  Target
 		History []History
 	}{
-		Name:    target.Name,
-		URL:     target.URL,
+		Target:  target,
 		History: target.History,
 	}
 
@@ -129,6 +133,39 @@ func handleToggleActive(w http.ResponseWriter, r *http.Request) {
 
 	target.IsActive = !target.IsActive
 	db.Save(&target)
+}
+
+func handleHistoryView(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idStr := vars["hid"]
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		log.Println("Invalid task ID:", err)
+		return
+	}
+
+	var history History
+	if err := db.First(&history, id).Error; err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Println("Error querying target:", err)
+		return
+	}
+
+	diff := make([]difflib.DiffRecord, 0)
+	if err := json.Unmarshal([]byte(history.Diff), &diff); err != nil {
+		log.Println("Error unmarshal prev history diff:", err)
+		return
+	}
+	data := struct {
+		History History
+		Diff    []difflib.DiffRecord
+	}{
+		History: history,
+		Diff:    diff,
+	}
+
+	renderTemplate(w, []string{"templates/history_view.html"}, data)
 }
 
 func renderTemplate(w http.ResponseWriter, templateFiles []string, data interface{}) {
